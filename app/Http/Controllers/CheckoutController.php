@@ -9,14 +9,14 @@ use App\Models\DetailTransaksi;
 class CheckoutController extends Controller
 {
     /**
-     * Menampilkan halaman checkout
+     * Tampilkan halaman checkout
      */
     public function index()
     {
-        // Ambil data cart dari session
+        // Ambil cart dari session (dummy / real)
         $cart = session()->get('cart', []);
 
-        // Hitung total harga
+        // Hitung subtotal
         $total = 0;
         foreach ($cart as $item) {
             $total += $item['harga'] * $item['qty'];
@@ -26,43 +26,58 @@ class CheckoutController extends Controller
     }
 
     /**
-     * Proses penyimpanan transaksi
+     * Proses checkout (simpan transaksi)
      */
     public function store(Request $request)
     {
-        // 🔥 Validasi input (biar aman)
-        $request->validate([
+        // 🔥 VALIDASI
+        $validated = $request->validate([
             'nama' => 'required',
             'email' => 'required|email',
             'phone' => 'required',
             'alamat' => 'required',
             'kota' => 'required',
             'kode_pos' => 'required',
+            'metode_pengiriman' => 'required'
+        ], [
+            'nama.required' => 'Nama wajib diisi',
+            'email.required' => 'Email wajib diisi',
+            'email.email' => 'Format email tidak valid',
+            'phone.required' => 'Nomor HP wajib diisi',
+            'alamat.required' => 'Alamat wajib diisi',
+            'kota.required' => 'Kota wajib diisi',
+            'kode_pos.required' => 'Kode pos wajib diisi',
+            'metode_pengiriman.required' => 'Pilih metode pengiriman'
         ]);
 
-        // Ambil cart dari session
+        // Ambil cart
         $cart = session()->get('cart', []);
 
         if (empty($cart)) {
             return redirect('/checkout')->with('error', 'Keranjang kosong!');
         }
 
-        // Hitung total harga
-        $total = 0;
+        // Hitung subtotal
+        $subtotal = 0;
         foreach ($cart as $item) {
-            $total += $item['harga'] * $item['qty'];
+            $subtotal += $item['harga'] * $item['qty'];
         }
 
-        // 🔥 Simpan ke tabel transaksi
+        // 🔥 Ongkir berdasarkan pilihan
+        $ongkir = $validated['metode_pengiriman'] === 'Express' ? 35000 : 15000;
+
+        $total = $subtotal + $ongkir;
+
+        // 🔥 Simpan transaksi
         $transaksi = Transaksi::create([
-            'nama' => $request->nama,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'alamat' => $request->alamat,
-            'kota' => $request->kota,
-            'kode_pos' => $request->kode_pos,
-            'metode_pengiriman' => $request->metode_pengiriman,
-            'catatan' => $request->catatan,
+            'nama' => $validated['nama'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'],
+            'alamat' => $validated['alamat'],
+            'kota' => $validated['kota'],
+            'kode_pos' => $validated['kode_pos'],
+            'metode_pengiriman' => $validated['metode_pengiriman'],
+            'catatan' => $request->catatan, // optional
             'total_harga' => $total,
             'status' => 'pending'
         ]);
@@ -71,16 +86,16 @@ class CheckoutController extends Controller
         foreach ($cart as $item) {
             DetailTransaksi::create([
                 'transaksi_id' => $transaksi->id,
-                'produk_id' => $item['id'],
+                'produk_id' => $item['id'], // dummy OK
                 'qty' => $item['qty'],
                 'subtotal' => $item['harga'] * $item['qty']
             ]);
         }
 
-        // Hapus cart setelah checkout
+        // 🔥 Hapus cart
         session()->forget('cart');
 
-        // Redirect ke halaman payment
-        return redirect('/payment')->with('success', 'Transaksi berhasil dibuat!');
+        // 🔥 Balik ke checkout + trigger popup sukses
+        return redirect('/checkout')->with('success', 'Transaksi berhasil dibuat!');
     }
 }
