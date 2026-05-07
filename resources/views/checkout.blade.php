@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <title>Checkout TOKOPI</title>
 </head>
@@ -152,21 +153,17 @@ Lanjut ke Pembayaran
 
 </form>
 
-<!-- 🔥 POPUP SUKSES -->
 @if(session('success'))
-<div id="popupSuccess" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white p-6 rounded-xl text-center w-80 shadow-lg">
-        <div class="text-green-600 text-4xl mb-2">✔</div>
-        <h2 class="text-lg font-semibold mb-2">Pesanan Sukses</h2>
-        <p class="text-sm text-gray-500 mb-4">
-            Pesanan berhasil disimpan ke database.
-        </p>
-        <button onclick="closePopup()"
-            class="bg-[#3c2a1a] text-white px-4 py-2 rounded">
-            OK
-        </button>
-    </div>
-</div>
+<script>
+    Swal.fire({
+        icon: 'success',
+        title: 'Pesanan Sukses',
+        text: 'Pesanan berhasil disimpan ke database.',
+        confirmButtonColor: '#3c2a1a',
+    }).then(() => {
+        window.location.href = "/payment";
+    });
+</script>
 @endif
 
 <!-- 🔥 SCRIPT ONGKIR -->
@@ -183,10 +180,6 @@ Lanjut ke Pembayaran
             totalText.innerText = "Rp" + (subtotal + ongkir).toLocaleString();
         });
     });
-
-    function closePopup() {
-        document.getElementById('popupSuccess').style.display = 'none';
-    }
 </script>
 
 </body>

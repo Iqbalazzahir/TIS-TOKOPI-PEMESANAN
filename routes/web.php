@@ -57,5 +57,5 @@ Route::post('/checkout', [CheckoutController::class, 'store']);
 
 //  PAYMENT (dummy dulu)
 Route::get('/payment', function () {
-    return "Halaman Payment (Dummy)";
+    return view('payment');
 });
