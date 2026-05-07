@@ -30,7 +30,7 @@ class CheckoutController extends Controller
      */
     public function store(Request $request)
     {
-        // 🔥 VALIDASI
+        //VALIDASI
         $validated = $request->validate([
             'nama' => 'required',
             'email' => 'required|email',
@@ -63,12 +63,12 @@ class CheckoutController extends Controller
             $subtotal += $item['harga'] * $item['qty'];
         }
 
-        // 🔥 Ongkir berdasarkan pilihan
+        //Ongkir berdasarkan pilihan
         $ongkir = $validated['metode_pengiriman'] === 'Express' ? 35000 : 15000;
 
         $total = $subtotal + $ongkir;
 
-        // 🔥 Simpan transaksi
+        //Simpan transaksi
         $transaksi = Transaksi::create([
             'nama' => $validated['nama'],
             'email' => $validated['email'],
@@ -82,20 +82,20 @@ class CheckoutController extends Controller
             'status' => 'pending'
         ]);
 
-        // 🔥 Simpan detail transaksi
+        //Simpan detail transaksi
         foreach ($cart as $item) {
             DetailTransaksi::create([
                 'transaksi_id' => $transaksi->id,
-                'produk_id' => $item['id'], // dummy OK
+                'produk_id' => $item['id'], // dummy
                 'qty' => $item['qty'],
                 'subtotal' => $item['harga'] * $item['qty']
             ]);
         }
 
-        // 🔥 Hapus cart
+        //Hapus cart
         session()->forget('cart');
 
-        // 🔥 Balik ke checkout + trigger popup sukses
-        return redirect('/checkout')->with('success', 'Transaksi berhasil dibuat!');
+        //Menuju ke payment + trigger popup sukses
+        return redirect('/payment')->with('success', 'Transaksi berhasil dibuat!');
     }
 }
